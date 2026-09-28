@@ -4,7 +4,9 @@
 
 document.addEventListener('DOMContentLoaded', () => {
 
-  // ── Navbar scroll ──────────────────────────────────────────
+  // Mark body so CSS reveal guard activates (fallback: no JS = content visible)
+  document.body.classList.add('js-loaded');
+
   const nav = document.getElementById('nav');
   window.addEventListener('scroll', () => {
     nav.classList.toggle('scrolled', window.scrollY > 40);
@@ -49,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
 
-  document.querySelectorAll('.reveal').forEach(el => revealObs.observe(el));
+  document.querySelectorAll('.r').forEach(el => revealObs.observe(el));
 
   // ── Smooth scroll ──────────────────────────────────────────
   const navH = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--nav-h')) || 72;
