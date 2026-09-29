@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const message = document.getElementById('message').value.trim();
       const subject = encodeURIComponent(`Sourcing Enquiry — ${company || name}`);
       const body    = encodeURIComponent(`Name: ${name}\nCompany: ${company}\nEmail: ${email}\n\nMessage:\n${message}`);
-      window.location.href = `mailto:contact@basusin.com?subject=${subject}&body=${body}`;
+      window.location.href = `mailto:info@basusinternational.com?subject=${subject}&body=${body}`;
     });
   }
 
