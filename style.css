@@ -706,7 +706,16 @@ section { padding: var(--py) var(--px); }
   border-left: 2px solid var(--gold);
   border-radius: var(--r);
 }
+.ci-note-title {
+  display: block;
+  font-size: 0.95rem;
+  color: var(--ink);
+  font-weight: 600;
+  margin-bottom: 0.65rem;
+  line-height: 1.4;
+}
 .ci-note p { font-size: 0.86rem; line-height: 1.8; color: var(--ink-2); }
+.ci-note p + p { margin-top: 0.75rem; }
 
 /* ============================================================
    FOOTER
