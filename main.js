@@ -1,86 +1,102 @@
-// ============================================================
-// BASUS International v2.0 — main.js
-// ============================================================
+'use strict';
 
-document.addEventListener('DOMContentLoaded', () => {
+const burger = document.getElementById('burger');
+const mobileNav = document.getElementById('nav-mobile');
+const desktop = window.matchMedia('(min-width: 1101px)');
+burger.hidden = false;
 
-  // Mark body so CSS reveal guard activates (fallback: no JS = content visible)
-  document.body.classList.add('js-loaded');
+function setMenu(open, restoreFocus = false) {
+  mobileNav.hidden = !open;
+  burger.setAttribute('aria-expanded', String(open));
+  burger.setAttribute('aria-label', open ? 'Close navigation' : 'Open navigation');
+  if (restoreFocus) burger.focus();
+}
 
-  const nav = document.getElementById('nav');
-  window.addEventListener('scroll', () => {
-    nav.classList.toggle('scrolled', window.scrollY > 40);
-  }, { passive: true });
-
-  // ── Active nav link via IntersectionObserver ───────────────
-  const sections = document.querySelectorAll('section[id]');
-  const navLinks = document.querySelectorAll('.nav-links a[href^="#"]');
-
-  const navObs = new IntersectionObserver((entries) => {
-    entries.forEach(e => {
-      if (e.isIntersecting) {
-        navLinks.forEach(l => l.classList.toggle('active', l.getAttribute('href') === `#${e.target.id}`));
-      }
-    });
-  }, { threshold: 0.3, rootMargin: '-72px 0px 0px 0px' });
-
-  sections.forEach(s => navObs.observe(s));
-
-  // ── Mobile menu ────────────────────────────────────────────
-  const burger = document.getElementById('burger');
-  const mobileNav = document.getElementById('nav-mobile');
-
-  const toggleMenu = (open) => {
-    burger.classList.toggle('open', open);
-    mobileNav.classList.toggle('open', open);
-    burger.setAttribute('aria-expanded', open);
-    document.body.style.overflow = open ? 'hidden' : '';
-  };
-
-  burger.addEventListener('click', () => toggleMenu(!burger.classList.contains('open')));
-  mobileNav.querySelectorAll('a').forEach(a => a.addEventListener('click', () => toggleMenu(false)));
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') toggleMenu(false); });
-
-  // ── Scroll reveal ──────────────────────────────────────────
-  const revealObs = new IntersectionObserver((entries) => {
-    entries.forEach(e => {
-      if (e.isIntersecting) {
-        e.target.classList.add('in');
-        revealObs.unobserve(e.target);
-      }
-    });
-  }, { threshold: 0.05, rootMargin: '0px 0px -20px 0px' });
-
-  document.querySelectorAll('.r').forEach(el => revealObs.observe(el));
-
-  // ── Smooth scroll ──────────────────────────────────────────
-  const navH = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--nav-h')) || 72;
-  document.querySelectorAll('a[href^="#"]').forEach(a => {
-    a.addEventListener('click', e => {
-      const target = document.querySelector(a.getAttribute('href'));
-      if (!target) return;
-      e.preventDefault();
-      window.scrollTo({ top: target.getBoundingClientRect().top + window.scrollY - navH, behavior: 'smooth' });
-    });
-  });
-
-  // ── Contact form → mailto ──────────────────────────────────
-  const form = document.getElementById('contactForm');
-  if (form) {
-    form.addEventListener('submit', e => {
-      e.preventDefault();
-      const name    = document.getElementById('name').value.trim();
-      const company = document.getElementById('company').value.trim();
-      const email   = document.getElementById('email').value.trim();
-      const message = document.getElementById('message').value.trim();
-      const subject = encodeURIComponent(`Supply Enquiry — ${company || name}`);
-      const body    = encodeURIComponent(`Name: ${name}\nCompany: ${company}\nEmail: ${email}\n\nSupply Requirement Details:\n${message}\n\n(Note: Feel free to attach 2D/3D technical drawings or specifications to this email)`);
-      window.location.href = `mailto:info@basusinternational.com?subject=${subject}&body=${body}`;
-    });
-  }
-
-  // ── Footer year ────────────────────────────────────────────
-  const yr = document.getElementById('year');
-  if (yr) yr.textContent = new Date().getFullYear();
-
+burger.addEventListener('click', () => setMenu(mobileNav.hidden));
+document.getElementById('nav').addEventListener('click', event => {
+  if (event.target.closest('a')) setMenu(false);
 });
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape' && !mobileNav.hidden) setMenu(false, true);
+});
+document.addEventListener('click', event => {
+  if (!document.getElementById('nav').contains(event.target)) setMenu(false);
+});
+document.getElementById('nav').addEventListener('focusout', event => {
+  if (!event.currentTarget.contains(event.relatedTarget)) setMenu(false);
+});
+desktop.addEventListener('change', () => setMenu(false));
+
+// Native fragment links preserve browser history and reduced-motion preferences.
+if ('IntersectionObserver' in window) {
+  const navLinks = document.querySelectorAll('.nav-links a');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      navLinks.forEach(link => {
+        if (link.hash === `#${entry.target.id}`) link.setAttribute('aria-current', 'location');
+        else link.removeAttribute('aria-current');
+      });
+    });
+  }, { rootMargin: '-100px 0px -55% 0px', threshold: 0 });
+  document.querySelectorAll('main > section[id]').forEach(section => observer.observe(section));
+}
+
+const form = document.getElementById('contactForm');
+const product = document.getElementById('product');
+const draft = document.getElementById('email-draft');
+const draftText = document.getElementById('draft-text');
+const draftStatus = document.getElementById('draft-status');
+const openEmail = document.getElementById('open-email');
+const recipient = 'info@basusinternational.com';
+
+// Trim before native validation so a whitespace-only requirement cannot pass.
+['name', 'email', 'message'].forEach(id => {
+  const input = document.getElementById(id);
+  input.addEventListener('input', () => {
+    input.setCustomValidity(input.value.trim() ? '' : 'Please complete this field.');
+  });
+});
+
+document.querySelectorAll('[data-product]').forEach(link => {
+  link.addEventListener('click', () => {
+    product.value = link.dataset.product;
+    draft.hidden = true;
+  });
+});
+form.addEventListener('input', event => {
+  // A changed requirement must not leave an outdated email link available.
+  if (event.target !== draftText) draft.hidden = true;
+});
+form.addEventListener('submit', event => {
+  event.preventDefault();
+  if (!form.reportValidity()) return;
+  const fields = new FormData(form);
+  const name = fields.get('name').trim();
+  const company = fields.get('company').trim();
+  const subject = `Supply Requirement — ${fields.get('product') || 'Custom Electrical Components'} — ${company || name}`;
+  const body = `Name: ${name}\nCompany: ${company || 'Not specified'}\nWork email: ${fields.get('email').trim()}\nProduct: ${fields.get('product') || 'To discuss'}\n\nRequirement details:\n${fields.get('message').trim()}\n\nDrawings and specifications can be attached to this email before sending.`;
+  draftText.value = `To: ${recipient}\nSubject: ${subject}\n\n${body}`;
+  const mailto = `mailto:${recipient}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  // shortcut: email apps have different URL limits; long drafts must use copy and webmail.
+  openEmail.hidden = mailto.length > 1800;
+  if (openEmail.hidden) openEmail.removeAttribute('href');
+  else openEmail.href = mailto;
+  draftStatus.textContent = openEmail.hidden
+    ? 'This draft is too long for a reliable email link. Copy it into your email service and attach your drawings.'
+    : 'Opening your email app does not send the enquiry. Review and send it there.';
+  draft.hidden = false;
+  document.getElementById('draft-heading').focus();
+});
+document.getElementById('copy-enquiry').addEventListener('click', async () => {
+  try {
+    await navigator.clipboard.writeText(draftText.value);
+    draftStatus.textContent = 'Draft copied. Paste it into your email service, attach your drawings and send it to BASUS.';
+  } catch {
+    draftText.focus();
+    draftText.select();
+    draftStatus.textContent = 'Copy is unavailable. The draft is selected; use your device’s Copy command.';
+  }
+});
+document.getElementById('form-submit').disabled = false;
+document.getElementById('year').textContent = new Date().getFullYear();
