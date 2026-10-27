@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
         revealObs.unobserve(e.target);
       }
     });
-  }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+  }, { threshold: 0.05, rootMargin: '0px 0px -20px 0px' });
 
   document.querySelectorAll('.r').forEach(el => revealObs.observe(el));
 
@@ -73,8 +73,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const company = document.getElementById('company').value.trim();
       const email   = document.getElementById('email').value.trim();
       const message = document.getElementById('message').value.trim();
-      const subject = encodeURIComponent(`Sourcing Enquiry — ${company || name}`);
-      const body    = encodeURIComponent(`Name: ${name}\nCompany: ${company}\nEmail: ${email}\n\nMessage:\n${message}`);
+      const subject = encodeURIComponent(`Supply Enquiry — ${company || name}`);
+      const body    = encodeURIComponent(`Name: ${name}\nCompany: ${company}\nEmail: ${email}\n\nSupply Requirement Details:\n${message}\n\n(Note: Feel free to attach 2D/3D technical drawings or specifications to this email)`);
       window.location.href = `mailto:info@basusinternational.com?subject=${subject}&body=${body}`;
     });
   }
