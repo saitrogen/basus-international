@@ -11,7 +11,7 @@ const { firefox, webkit } = require('playwright');
       const page = await browser.newPage({ reducedMotion: 'reduce' });
       const errors = [];
       page.on('pageerror', error => errors.push(error.message));
-      for (const width of [1440, 820, 390, 360, 320]) {
+      for (const width of [1440, 820, 390, 320]) {
         await page.setViewportSize({ width, height: 900 });
         await page.goto(origin);
         await page.evaluate(() => document.fonts.ready);

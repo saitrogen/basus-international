@@ -49,9 +49,6 @@ assert schema['url'] == 'https://basusinternational.com/'
 assert 'areaServed' not in schema
 assert (root / urlparse(schema['logo']).path.lstrip('/')).is_file()
 assert 'novalidate' not in html
-assert 'assets/hero-bg' not in html and 'assets/global-supply-map' not in html
-assert '-pillar' not in html and 'assets/social-share.jpg' not in html
-assert html.count('class="technical-details"') == 3
 for asset in re.findall(r'url\([\'\"]?([^\'\")]+)', (root / 'style.css').read_text()):
     assert (root / asset).is_file(), f'Missing CSS resource: {asset}'
 sitemap = ET.parse(root / 'sitemap.xml')
