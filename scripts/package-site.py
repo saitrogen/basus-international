@@ -8,11 +8,11 @@ import hashlib
 root = Path(__file__).resolve().parents[1]
 files = [root / name for name in (
     'index.html', '404.html', 'style.css', 'main.js', 'robots.txt',
-    'sitemap.xml', '_headers', 'assets/favicon.png', 'assets/social-share.jpg',
+    'sitemap.xml', '_headers', 'assets/favicon.png', 'assets/social-card.png',
 )]
-files += sorted((root / 'assets').glob('*.webp'))
-files += sorted((root / 'assets/fonts').glob('*.woff2'))
-files += sorted((root / 'assets/fonts').glob('*-OFL.txt'))
+files += [root / 'assets/basus-logo.webp', root / 'assets/basus-logo-dark.webp']
+files += sorted((root / 'assets/diagrams').glob('*.svg'))
+files += [root / 'assets/fonts/inter-400.woff2', root / 'assets/fonts/inter-OFL.txt']
 assert all(path.is_file() for path in files), 'A required public file is missing.'
 assert len(files) == len(set(files)), 'Duplicate package entry.'
 assert not any(path.suffix in ('.py', '.cjs') or '.git' in path.parts for path in files)

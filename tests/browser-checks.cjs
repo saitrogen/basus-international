@@ -18,7 +18,7 @@ const { chromium } = require('playwright');
   const results = [];
   fs.mkdirSync('output/playwright', { recursive: true });
   try {
-    for (const width of [1440, 1280, 1100, 1024, 820, 768, 760, 390, 320]) {
+    for (const width of [1920, 1440, 1280, 1100, 1024, 820, 768, 760, 430, 390, 360, 320]) {
       await page.setViewportSize({ width, height: width < 761 ? 844 : 1000 });
       await page.goto(origin);
       await page.evaluate(() => document.fonts.ready);
@@ -42,6 +42,9 @@ const { chromium } = require('playwright');
       assert.equal(state.h1s, 1);
       assert.equal(state.products, 3);
       assert.equal(state.reducedMotion, 'auto');
+      assert.equal(await page.locator('.hero-visual').evaluate(figure =>
+        figure.getBoundingClientRect().bottom <= document.querySelector('.hero-bottom').getBoundingClientRect().top
+      ), true, `hero illustration overlaps the introduction at ${width}px`);
       assert.equal(state.year, String(new Date().getFullYear()));
       if (width <= 1100) {
         await page.locator('#burger').click();
@@ -61,7 +64,7 @@ const { chromium } = require('playwright');
         await page.setViewportSize({ width, height: width < 761 ? 844 : 1000 });
       }
       await page.goto(origin);
-      if ([1440, 820, 390, 320].includes(width)) {
+      if ([1440, 820, 390, 360, 320].includes(width)) {
         for (const image of await page.locator('img').all()) {
         await image.scrollIntoViewIfNeeded();
         await page.waitForFunction(element => element.complete && element.naturalWidth > 0, await image.elementHandle());
@@ -84,6 +87,14 @@ const { chromium } = require('playwright');
       assert.equal(await page.locator('#product').inputValue(), await link.getAttribute('data-product'));
       assert.equal(new URL(page.url()).hash, '#contact');
     }
+    for (const details of await page.locator('.technical-details').all()) {
+      assert.equal(await details.locator('dl').isVisible(), false);
+      await details.locator('summary').focus();
+      await page.keyboard.press('Enter');
+      assert.equal(await details.locator('dl').isVisible(), true);
+      await page.keyboard.press('Enter');
+      assert.equal(await details.locator('dl').isVisible(), false);
+    }
     const submit = page.locator('#form-submit');
     await submit.click();
     assert.equal(await page.locator('#email-draft').isVisible(), false);
@@ -96,6 +107,8 @@ const { chromium } = require('playwright');
     await page.locator('#name').fill('Buyer & Engineer');
     await page.locator('#company').fill('Example + Company');
     await page.locator('#email').fill('buyer@example.com');
+    await page.locator('#quantity').fill('  500 units per order  ');
+    await page.locator('#destination').fill('  Rotterdam, Netherlands  ');
     const requirement = 'ETP copper, tin finish. Drawing B-12 Rev C. 500 units. Delivery to Rotterdam.\nReview IEC requirements & Incoterms.';
     await page.locator('#message').fill(requirement);
     const countBefore = requests.length;
@@ -106,6 +119,8 @@ const { chromium } = require('playwright');
     assert.equal(mail.protocol, 'mailto:');
     assert.equal(mail.pathname, 'info@basusinternational.com');
     assert.ok(mail.searchParams.get('body').includes(requirement));
+    assert.ok(mail.searchParams.get('body').includes('Estimated quantity: 500 units per order'));
+    assert.ok(mail.searchParams.get('body').includes('Delivery destination: Rotterdam, Netherlands'));
     assert.ok(mail.searchParams.get('subject').includes('Example + Company'));
     await page.locator('#copy-enquiry').click();
     assert.equal(await page.evaluate(() => navigator.clipboard.readText()), await page.locator('#draft-text').inputValue());
@@ -124,14 +139,23 @@ const { chromium } = require('playwright');
     await page.locator('#copy-enquiry').click();
     assert.match(await page.locator('#draft-status').textContent(), /draft is selected/);
     assert.equal(await page.locator('#draft-text').evaluate(el => el.selectionEnd - el.selectionStart), (await page.locator('#draft-text').inputValue()).length);
+    // The new fields are optional; an unknown quantity or route must not block enquiry.
+    await page.locator('#quantity').fill('');
+    await page.locator('#destination').fill('');
+    await page.locator('#message').fill('Please review drawing Rev D.');
+    await submit.click();
+    assert.match(await page.locator('#draft-text').inputValue(), /Estimated quantity: To discuss/);
+    assert.match(await page.locator('#draft-text').inputValue(), /Delivery destination: To discuss/);
     // Navigation remains usable when scripting is disabled.
-    const nojs = await browser.newContext({ javaScriptEnabled: false, viewport: { width: 390, height: 844 } });
+    const nojs = await browser.newContext({ javaScriptEnabled: false, reducedMotion: 'reduce', viewport: { width: 390, height: 844 } });
     const nojsPage = await nojs.newPage();
     await nojsPage.goto(origin);
     assert.equal(await nojsPage.locator('.no-js-note').isVisible(), true);
     assert.equal(await nojsPage.locator('#form-submit').isDisabled(), true);
     await nojsPage.locator('.portfolio-index a').first().click();
     assert.equal(new URL(nojsPage.url()).hash, '#copper-busbars');
+    await nojsPage.locator('.technical-details summary').first().click();
+    assert.equal(await nojsPage.locator('.technical-details dl').first().isVisible(), true);
     await nojs.close();
     const data = await page.locator('script[type="application/ld+json"]').textContent();
     assert.equal(JSON.parse(data)['@type'], 'Organization');

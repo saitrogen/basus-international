@@ -75,7 +75,7 @@ form.addEventListener('submit', event => {
   const name = fields.get('name').trim();
   const company = fields.get('company').trim();
   const subject = `Supply Requirement — ${fields.get('product') || 'Custom Electrical Components'} — ${company || name}`;
-  const body = `Name: ${name}\nCompany: ${company || 'Not specified'}\nWork email: ${fields.get('email').trim()}\nProduct: ${fields.get('product') || 'To discuss'}\n\nRequirement details:\n${fields.get('message').trim()}\n\nDrawings and specifications can be attached to this email before sending.`;
+  const body = `Name: ${name}\nCompany: ${company || 'Not specified'}\nWork email: ${fields.get('email').trim()}\nProduct: ${fields.get('product') || 'To discuss'}\nEstimated quantity: ${fields.get('quantity').trim() || 'To discuss'}\nDelivery destination: ${fields.get('destination').trim() || 'To discuss'}\n\nRequirement details:\n${fields.get('message').trim()}\n\nDrawings and specifications can be attached to this email before sending.`;
   draftText.value = `To: ${recipient}\nSubject: ${subject}\n\n${body}`;
   const mailto = `mailto:${recipient}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   // shortcut: email apps have different URL limits; long drafts must use copy and webmail.
